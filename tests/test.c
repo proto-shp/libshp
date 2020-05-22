@@ -1,9 +1,11 @@
 #include "./unit.h"
 #include <stdio.h>
 
-const char *test1() {
-	unit_assert("Here is a message", 1 == 1);
+#include "libshp/csocket.h"
 
+const char *test1() {
+    csocket sock;
+    csocket_udp_init(&sock, "", 5400);
 	pass();
 }
 
