@@ -5,7 +5,7 @@ project(libshp VERSION 1.0 LANGUAGES C)
 set(C_STANDARD 11)
 option(MAKE_TESTS FALSE "Build Unit Tests")
 
-add_library(libshp ./src/csocket.c)
+add_library(libshp ./src/csocket.c ./src/id_table.c)
 add_library(LIBSHP::libshp ALIAS libshp)
 
 target_include_directories(libshp
