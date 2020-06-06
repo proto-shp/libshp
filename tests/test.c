@@ -40,6 +40,30 @@ const char *message() {
 	add_s32(&payload, 1234);
 	add_u32(&payload, 1997);
 
+	add_s16(&payload, -321);
+	add_u16(&payload, 111);
+
+	add_s8(&payload, -1);
+	add_u8(&payload, 1);
+
+	uint32_t a[3] = {1, 1, 1};
+	int32_t b[3] = {-1, -1, -1};
+
+	add_u32_array(&payload, a, 3);
+	add_s32_array(&payload, b, 3);
+
+	uint16_t c[2] = {2, 2};
+	int16_t d[2] = {-2, -2};
+
+	add_u16_array(&payload, c, 2);
+	add_s16_array(&payload, d, 2);
+
+	uint8_t e[1] = {1};
+	int8_t f[1] = {-1};
+
+	add_u8_array(&payload, e, 1);
+	add_s8_array(&payload, f, 1);
+
 	add_message_payload(&message, &payload);
 
 	void *result = NULL;
@@ -55,11 +79,62 @@ const char *message() {
 
 
 	void *args = back.payload->arguments;
-	int32_t first = get_s32(&args);
-	uint32_t second = get_u32(&args);
+	int32_t s32 = get_s32(&args);
+	uint32_t u32 = get_u32(&args);
+	
+	int16_t s16 = get_s16(&args);
+	uint16_t u16 = get_u16(&args);
 
-	unit_assert("Expected 1234\n", first == 1234);
-	unit_assert("Expected 1997\n", second == 1997);
+	int8_t s8 = get_s8(&args);
+	uint8_t u8 = get_u8(&args);
+
+	unit_assert("Expected 1234\n", s32 == 1234);
+	unit_assert("Expected 1997\n", u32 == 1997);
+
+	unit_assert("Expected 1234\n", s16 == -321);
+	unit_assert("Expected 1997\n", u16 == 111);
+	
+	unit_assert("Expected 1234\n", s8 == -1);
+	unit_assert("Expected 1997\n", u8 == 1);
+
+	uint32_t *ra;
+	int32_t *rb;
+	uint16_t *rc;
+	int16_t *rd;
+	uint8_t *re;
+	int8_t *rf;
+	
+	uint32_t ca = get_u32_array(&args, &ra);
+	uint32_t cb = get_s32_array(&args, &rb);
+	uint32_t cc = get_u16_array(&args, &rc);
+	uint32_t cd = get_s16_array(&args, &rd);
+	uint32_t ce = get_u8_array(&args, &re);
+	uint32_t cf = get_s8_array(&args, &rf);
+
+	unit_assert("Size should be 3\n", ca == 3);
+	unit_assert("Size should be 3\n", cb == 3);
+	unit_assert("Size should be 2\n", cc == 2);
+	unit_assert("Size should be 2\n", cd == 2);
+	unit_assert("Size should be 1\n", ce == 1);
+	unit_assert("Size should be 1\n", cf == 1);
+	
+	unit_assert("Value should be 1\n", ra[0]==1);
+	unit_assert("Value should be 1\n", ra[1]==1);
+	unit_assert("Value should be 1\n", ra[2]==1);
+
+	unit_assert("Value should be -1\n", rb[0]==-1);
+	unit_assert("Value should be -1\n", rb[1]==-1);
+	unit_assert("Value should be -1\n", rb[2]==-1);
+
+	unit_assert("Value should be 2\n", rc[0]==2);
+	unit_assert("Value should be 2\n", rc[1]==2);
+
+	unit_assert("Value should be -2\n", rd[0]==-2);
+	unit_assert("Value should be -2\n", rd[1]==-2);
+
+	unit_assert("Value should be 1\n", re[0]==1);
+
+	unit_assert("Value should be -1\n", rf[0]==-1);
 
 	pass();
 }

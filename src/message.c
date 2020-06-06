@@ -3,6 +3,8 @@
 #include <string.h>
 #include <assert.h>
 
+#include <stdio.h>
+
 #if defined(__linux__) || defined(__APPLE__)
 	#include <arpa/inet.h>
 #elif defined(_WIN32)
@@ -161,7 +163,6 @@ void add_u32_array(Message_Payload *payload, uint32_t *values, uint32_t count){
 }
 
 void add_s32_array(Message_Payload *payload, int32_t *values, uint32_t count){
-	add_u32(payload, count);
 	add_u32_array(payload, (uint32_t *)values, count);
 }
 
@@ -184,7 +185,6 @@ void add_u16_array(Message_Payload *payload, uint16_t *values, uint32_t count){
 }
 
 void add_s16_array(Message_Payload *payload, int16_t *values, uint32_t count){
-	add_u32(payload, count);
 	add_u16_array(payload, (uint16_t *)values, count);
 }
 
@@ -207,7 +207,6 @@ void add_u8_array(Message_Payload *payload, uint8_t *values, uint32_t count){
 }
 
 void add_s8_array(Message_Payload *payload, int8_t *values, uint32_t count){
-	add_u32(payload, count);
 	add_u8_array(payload, (uint8_t *)values, count);
 }
 
@@ -221,15 +220,15 @@ void add_s8(Message_Payload *payload, int8_t a){
 
 uint32_t get_u32_array(void **data, uint32_t **result){
 	uint32_t count = get_u32(data);
-	*result = (uint32_t *)malloc(sizeof(uint32_t)*count);
+	(*result)= (uint32_t *)malloc(sizeof(uint32_t)*count);
 	for(size_t i = 0; i < count; i++){
-		*result[i] = get_u32(data);
+		(*result)[i] = get_u32(data);
 	}
 
 	return count;
 }
 
-uint32_t gets32_array(void **data, int32_t **result){
+uint32_t get_s32_array(void **data, int32_t **result){
 	return get_u32_array(data, (uint32_t **)result);
 }
 
@@ -251,21 +250,21 @@ int32_t get_s32(void **data){
 
 uint32_t get_u16_array(void **data, uint16_t **result){
 	uint32_t count = get_u32(data);
-	*result = (uint16_t *)malloc(sizeof(uint16_t)*count);
+	(*result) = (uint16_t *)malloc(sizeof(uint16_t)*count);
 	for(size_t i = 0; i < count; i++){
-		*result[i] = get_u16(data);
+		(*result)[i] = get_u16(data);
 	}
 
 	return count;
 }
 
-uint32_t gets16_array(void **data, int16_t **result){
+uint32_t get_s16_array(void **data, int16_t **result){
 	return get_u16_array(data, (uint16_t **)result);
 }
 
 uint16_t get_u16(void **data){
 	void *d = *data;
-	uint16_t result = ntohl(((uint16_t *)d)[0]);
+	uint16_t result = ntohs(((uint16_t *)d)[0]);
 	*data = *data+2;
 
 	return result;
@@ -273,7 +272,7 @@ uint16_t get_u16(void **data){
 
 int16_t get_s16(void **data){
 	void *d = *data;
-	int16_t result = ntohl(((int16_t *)d)[0]);
+	int16_t result = ntohs(((int16_t *)d)[0]);
 	*data = *data+2;
 
 	return result;
@@ -281,9 +280,9 @@ int16_t get_s16(void **data){
 
 uint32_t get_u8_array(void **data, uint8_t **result){
 	uint32_t count = get_u32(data);
-	*result = (uint8_t *)malloc(sizeof(uint8_t)*count);
+	(*result) = (uint8_t *)malloc(sizeof(uint8_t)*count);
 	for(size_t i = 0; i < count; i++){
-		*result[i] = get_u8(data);
+		(*result)[i] = get_u8(data);
 	}
 
 	return count;
