@@ -1,10 +1,7 @@
-#include "message.h"
+#include "libshp/message.h"
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-
-//Temporary
-#include <stdio.h>
 
 #if defined(__linux__) || defined(__APPLE__)
 	#include <arpa/inet.h>
@@ -155,6 +152,19 @@ Message_Header deserialize_message(void *raw){
 	return header;
 }
 
+void add_u32_array(Message_Payload *payload, uint32_t *values, uint32_t count){
+	add_u32(payload, count);
+	for(size_t i = 0; i < count; ++i){
+		uint32_t write = htonl(values[i]);
+		write_bytes(payload, (uint8_t *)&write, 4);
+	}
+}
+
+void add_s32_array(Message_Payload *payload, int32_t *values, uint32_t count){
+	add_u32(payload, count);
+	add_u32_array(payload, (uint32_t *)values, count);
+}
+
 void add_u32(Message_Payload *payload, uint32_t a){
 	uint32_t write = htonl(a);
 	write_bytes(payload, (uint8_t *)&write, 4);
@@ -163,6 +173,64 @@ void add_u32(Message_Payload *payload, uint32_t a){
 void add_s32(Message_Payload *payload, int32_t a){
 	uint32_t write = htonl((uint32_t) a);
 	write_bytes(payload, (uint8_t *)&write, 4);
+}
+
+void add_u16_array(Message_Payload *payload, uint16_t *values, uint32_t count){
+	add_u32(payload, count);
+	for(size_t i = 0; i < count; ++i){
+		uint16_t write = htons(values[i]);
+		write_bytes(payload, (uint8_t *)&write, 2);
+	}
+}
+
+void add_s16_array(Message_Payload *payload, int16_t *values, uint32_t count){
+	add_u32(payload, count);
+	add_u16_array(payload, (uint16_t *)values, count);
+}
+
+void add_u16(Message_Payload *payload, uint16_t a){
+	uint16_t write = htons(a);
+	write_bytes(payload, (uint8_t *)&write, 2);
+}
+
+void add_s16(Message_Payload *payload, int16_t a){
+	uint16_t write = htons((uint16_t)a);
+	write_bytes(payload, (uint8_t *)&write, 2);
+}
+
+void add_u8_array(Message_Payload *payload, uint8_t *values, uint32_t count){
+	add_u32(payload, count);
+	for(size_t i = 0; i < count; ++i){
+		uint8_t write = values[i];
+		write_bytes(payload, &write, 1);
+	}
+}
+
+void add_s8_array(Message_Payload *payload, int8_t *values, uint32_t count){
+	add_u32(payload, count);
+	add_u8_array(payload, (uint8_t *)values, count);
+}
+
+void add_u8(Message_Payload *payload, uint8_t a){
+	write_bytes(payload, &a, 1);
+}
+
+void add_s8(Message_Payload *payload, int8_t a){
+	write_bytes(payload, (uint8_t *)&a, 1);
+}
+
+uint32_t get_u32_array(void **data, uint32_t **result){
+	uint32_t count = get_u32(data);
+	*result = (uint32_t *)malloc(sizeof(uint32_t)*count);
+	for(size_t i = 0; i < count; i++){
+		*result[i] = get_u32(data);
+	}
+
+	return count;
+}
+
+uint32_t gets32_array(void **data, int32_t **result){
+	return get_u32_array(data, (uint32_t **)result);
 }
 
 uint32_t get_u32(void **data){
@@ -175,46 +243,67 @@ uint32_t get_u32(void **data){
 
 int32_t get_s32(void **data){
 	void *d = *data;
-	int32_t result = ntohl(((uint32_t *)d)[0]);
+	int32_t result = ntohl(((int32_t *)d)[0]);
 	*data = *data+4;
 
 	return result;
 }
 
-int main(){
-	Message_Header message = make_message();
-	Message_Payload payload = make_message_payload();
-	add_s32(&payload, 1234);
-	add_u32(&payload, 1997);
-
-	add_message_payload(&message, &payload);
-
-	void *result = NULL;
-	uint32_t l = serialize_message(&message, &result);
-
-	for(int i = 0; i< l; i++){
-		printf("%x ", ((uint8_t *)result)[i]);
-		if((i+1)%8 == 0){
-			printf("\n");
-		}
+uint32_t get_u16_array(void **data, uint16_t **result){
+	uint32_t count = get_u32(data);
+	*result = (uint16_t *)malloc(sizeof(uint16_t)*count);
+	for(size_t i = 0; i < count; i++){
+		*result[i] = get_u16(data);
 	}
 
-	Message_Header back = deserialize_message(result);
-	printf("Content_length: %d, magic_number = %x, flags = %d, message_id = %d\n", back.content_length, back.magic_number, back.flags, back.message_id);
+	return count;
+}
 
-	void *args = back.payload->arguments;
-	int32_t first = get_s32(&args);
-	uint32_t second = get_u32(&args);
+uint32_t gets16_array(void **data, int16_t **result){
+	return get_u16_array(data, (uint16_t **)result);
+}
 
-	printf("first = %d, second = %d\n", first, second);
+uint16_t get_u16(void **data){
+	void *d = *data;
+	uint16_t result = ntohl(((uint16_t *)d)[0]);
+	*data = *data+2;
 
-	args = back.payload->arguments;
-	first = get_s32(&args);
-	second = get_u32(&args);
+	return result;
+}
 
-	printf("first = %d, second = %d\n", first, second);
+int16_t get_s16(void **data){
+	void *d = *data;
+	int16_t result = ntohl(((int16_t *)d)[0]);
+	*data = *data+2;
 
+	return result;
+}
 
+uint32_t get_u8_array(void **data, uint8_t **result){
+	uint32_t count = get_u32(data);
+	*result = (uint8_t *)malloc(sizeof(uint8_t)*count);
+	for(size_t i = 0; i < count; i++){
+		*result[i] = get_u8(data);
+	}
 
-	return 0;
+	return count;
+}
+
+uint32_t get_s8_array(void **data, int8_t **result){
+	return get_u8_array(data, (uint8_t **)result);
+}
+uint8_t get_u8(void **data){
+	void *d = *data;
+	uint8_t result = ((uint8_t *)d)[0];
+	*data = *data+1;
+
+	return result;
+}
+
+int8_t get_s8(void **data){
+	void *d = *data;
+	int8_t result = ((int8_t *)d)[0];
+	*data = *data+1;
+
+	return result;
 }

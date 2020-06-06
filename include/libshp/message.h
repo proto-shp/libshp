@@ -41,17 +41,40 @@ Message_Header deserialize_message(void *raw);
 void add_message_payload(Message_Header *message, Message_Payload *payload);
 
 // Functions for writing arguments to a payload
-// TODO Add 64 bit numbers
+void add_u32_array(Message_Payload *payload, uint32_t *values, uint32_t count);
+void add_s32_array(Message_Payload *payload, int32_t *values, uint32_t count);
+
 void add_u32(Message_Payload *payload, uint32_t a);
 void add_s32(Message_Payload *payload, int32_t a);
+
+void add_u16_array(Message_Payload *payload, uint16_t *values, uint32_t count);
+void add_s16_array(Message_Payload *payload, int16_t *values, uint32_t count);
 
 void add_u16(Message_Payload *payload, uint16_t a);
 void add_s16(Message_Payload *payload, int16_t a);
 
-void add_u8(Message_Payload *payload, uint16_t a);
-void add_s8(Message_Payload *payload, uint16_t a);
+void add_u8_array(Message_Payload *payload, uint8_t *values, uint32_t count);
+void add_s8_array(Message_Payload *payload, int8_t *values, uint32_t count);
+
+void add_u8(Message_Payload *payload, uint8_t a);
+void add_s8(Message_Payload *payload, int8_t a);
+
+uint32_t get_u32_array(void **data, uint32_t **result);
+uint32_t get_s32_array(void **data, int32_t **result);
 
 uint32_t get_u32(void **data);
 int32_t get_s32(void **data);
+
+uint32_t get_u16_array(void **data, uint16_t **result);
+uint32_t get_s16_array(void **data, int16_t **result);
+
+uint16_t get_u16(void **data);
+int16_t get_s16(void **data);
+
+uint32_t get_u8_array(void **data, uint8_t **result);
+uint32_t get_s8_array(void **data, int8_t **result);
+
+uint8_t get_u8(void **data);
+int8_t get_s8(void **data);
 
 #endif
