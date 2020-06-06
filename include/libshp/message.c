@@ -136,7 +136,9 @@ Message_Header deserialize_message(void *raw){
 
 		payload->arguments = space + sizeof(Message_Payload);
 		payload->allocated_space = length - DEFAULT_PAYLOAD_LENGTH;
-		
+		memcpy(payload->arguments, raw+read, length - DEFAULT_PAYLOAD_LENGTH);
+
+
 		read += length - DEFAULT_PAYLOAD_LENGTH;
 		
 		if(current == NULL){
@@ -163,18 +165,55 @@ void add_s32(Message_Payload *payload, int32_t a){
 	write_bytes(payload, (uint8_t *)&write, 4);
 }
 
+uint32_t get_u32(void **data){
+	void *d = *data;
+	uint32_t result = ntohl(((uint32_t *)d)[0]);
+	*data = *data+4;
+
+	return result;
+}
+
+int32_t get_s32(void **data){
+	void *d = *data;
+	int32_t result = ntohl(((uint32_t *)d)[0]);
+	*data = *data+4;
+
+	return result;
+}
+
 int main(){
 	Message_Header message = make_message();
 	Message_Payload payload = make_message_payload();
 	add_s32(&payload, 1234);
+	add_u32(&payload, 1997);
 
 	add_message_payload(&message, &payload);
 
 	void *result = NULL;
-	serialize_message(&message, &result);
+	uint32_t l = serialize_message(&message, &result);
+
+	for(int i = 0; i< l; i++){
+		printf("%x ", ((uint8_t *)result)[i]);
+		if((i+1)%8 == 0){
+			printf("\n");
+		}
+	}
 
 	Message_Header back = deserialize_message(result);
 	printf("Content_length: %d, magic_number = %x, flags = %d, message_id = %d\n", back.content_length, back.magic_number, back.flags, back.message_id);
+
+	void *args = back.payload->arguments;
+	int32_t first = get_s32(&args);
+	uint32_t second = get_u32(&args);
+
+	printf("first = %d, second = %d\n", first, second);
+
+	args = back.payload->arguments;
+	first = get_s32(&args);
+	second = get_u32(&args);
+
+	printf("first = %d, second = %d\n", first, second);
+
 
 
 	return 0;

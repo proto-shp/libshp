@@ -51,5 +51,7 @@ void add_s16(Message_Payload *payload, int16_t a);
 void add_u8(Message_Payload *payload, uint16_t a);
 void add_s8(Message_Payload *payload, uint16_t a);
 
+uint32_t get_u32(void **data);
+int32_t get_s32(void **data);
 
 #endif
