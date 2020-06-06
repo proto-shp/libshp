@@ -3,11 +3,11 @@
 
 #include <stdint.h>
 
-#define HEADER_DEFAULT_LENGTH 48;
+#define HEADER_DEFAULT_LENGTH 12;
 #define HEADER_MAGIC_NUMBER 0xcafe;
 
 #define DEFAULT_SPACE_FOR_PAYLOAD_ARGS 512
-#define DEFAULT_PAYLOAD_LENGTH 64
+#define DEFAULT_PAYLOAD_LENGTH 8
 
 typedef struct Message_Payload Message_Payload;
 struct Message_Payload{
@@ -34,6 +34,9 @@ Message_Header make_message();
 Message_Payload make_message_payload();
 
 uint32_t serialize_message(Message_Header *message, void **result);
+
+//Please do not free raw until this message is done being used
+Message_Header deserialize_message(void *raw);
 
 void add_message_payload(Message_Header *message, Message_Payload *payload);
 

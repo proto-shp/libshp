@@ -3,6 +3,9 @@
 #include <string.h>
 #include <assert.h>
 
+//Temporary
+#include <stdio.h>
+
 #if defined(__linux__) || defined(__APPLE__)
 	#include <arpa/inet.h>
 #elif defined(_WIN32)
@@ -55,23 +58,12 @@ void add_message_payload(Message_Header *message, Message_Payload *payload){
 }
 
 void write_bytes(Message_Payload *payload, const uint8_t *bytes, size_t count){
-	if(payload->length - 64 + count > payload->allocated_space){
+	if(payload->length - 8 + count > payload->allocated_space){
 		payload->arguments = realloc(payload->arguments, payload->allocated_space * 2);
 		payload->allocated_space *= 2;
 	}
-	memcpy(payload->arguments + payload->length - 64, bytes, count);
+	memcpy(payload->arguments + payload->length - DEFAULT_PAYLOAD_LENGTH, bytes, count);
 	payload->length += count;
-}
-
-uint32_t find_payload_length(Message_Payload *payload){
-	uint32_t result = 0;
-
-	while(payload != NULL){
-		result += payload->length;
-		payload = payload->next;
-	}
-
-	return result;
 }
 
 uint32_t serialize_message(Message_Header *message, void **result){
@@ -79,16 +71,16 @@ uint32_t serialize_message(Message_Header *message, void **result){
 	//TODO check this worked
 
 	uint32_t written = 0;
-	((uint32_t *)(r+written))[0] = ntohl(message->content_length);
+	((uint32_t *)(r+written))[0] = htonl(message->content_length);
 	written += 4;
 	
-	((uint16_t *)(r+written))[0] = ntohs(message->magic_number);
+	((uint16_t *)(r+written))[0] = htons(message->magic_number);
 	written += 2;
 	
-	((uint16_t *)(r+written))[0] = ntohs(message->flags);
+	((uint16_t *)(r+written))[0] = htons(message->flags);
 	written += 2;
 	
-	((uint32_t *)(r+written))[0] = ntohl(message->message_id);
+	((uint32_t *)(r+written))[0] = htonl(message->message_id);
 	written += 4;
 
 	Message_Payload *p = message->payload;
@@ -100,8 +92,8 @@ uint32_t serialize_message(Message_Header *message, void **result){
 		((uint32_t *)(r+written))[0] = ntohl(p->function_id);
 		written += 4;
 		
-		memcpy(r+written, p->arguments, p->length - 64);
-		written += p->length - 64;
+		memcpy(r+written, p->arguments, p->length - DEFAULT_PAYLOAD_LENGTH);
+		written += p->length - DEFAULT_PAYLOAD_LENGTH;
 
 		p = p->next;
 	}
@@ -110,6 +102,55 @@ uint32_t serialize_message(Message_Header *message, void **result){
 
 	*result = r;
 	return message->content_length;
+}
+
+Message_Header deserialize_message(void *raw){
+	Message_Header header;
+	uint32_t read = 0;
+	header.content_length = ntohl(((uint32_t *)(raw))[0]);
+	read += 4;
+
+	header.magic_number = ntohs(((uint16_t *)(raw+read))[0]);
+	read += 2;
+
+	header.flags = ntohs(((uint16_t *)(raw+read))[0]);
+	read += 2;
+
+	header.message_id = ntohl(((uint32_t *)(raw+read))[0]);
+	read += 4;
+
+	Message_Payload *current = NULL;
+
+	while(read < header.content_length){
+		uint32_t length = ntohl(((uint32_t *)(raw+read))[0]);
+		read += 4;
+
+		uint32_t function_id = ntohl(((uint32_t *)(raw+read))[0]);
+		read += 4;
+
+		//TODO This is over allocating, don't want to complicate further yet
+		void *space = malloc(sizeof(Message_Payload) + length);
+		Message_Payload *payload = (Message_Payload *)space;
+		payload->length = length;
+		payload->function_id = function_id;
+
+		payload->arguments = space + sizeof(Message_Payload);
+		payload->allocated_space = length - DEFAULT_PAYLOAD_LENGTH;
+		
+		read += length - DEFAULT_PAYLOAD_LENGTH;
+		
+		if(current == NULL){
+			current = payload;
+			header.payload = current;
+		}else{
+			current->next = payload;
+			current = payload;
+		}
+	}
+
+	assert(read == header.content_length);
+
+	return header;
 }
 
 void add_u32(Message_Payload *payload, uint32_t a){
@@ -128,6 +169,13 @@ int main(){
 	add_s32(&payload, 1234);
 
 	add_message_payload(&message, &payload);
+
+	void *result = NULL;
+	serialize_message(&message, &result);
+
+	Message_Header back = deserialize_message(result);
+	printf("Content_length: %d, magic_number = %x, flags = %d, message_id = %d\n", back.content_length, back.magic_number, back.flags, back.message_id);
+
 
 	return 0;
 }
