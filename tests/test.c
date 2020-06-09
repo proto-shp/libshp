@@ -4,30 +4,29 @@
 #include <netinet/in.h>
 
 #include "libshp/csocket.h"
+#include "libshp/server.h"
 
 csocket tcp_client;
+csocket udp_client;
+
+csocket tcp_server;
+csocket udp_server;
 
 shp_error handler(csocket_context *c) {
-    printf("%i\n", ntohl(*(uint32_t *)c->buffer));
-    printf("here %s %i\n", c->buffer + 4, c->buffer_length);
-
     char *hello = "hello";
-    printf("%s     %i\n", c->ip, c->port);
     csocket_tcp_send_to(tcp_client, c->port, c->ip, hello, 5);
     return 0;
 }
 
 const char *test1() {
     csocket sock;
-
-    csocket_tcp_init(&tcp_client, "", 5200);
-    // csocket_tcp_listen(sock, handler);
-    csocket_udp_init(&sock, "", 5200);
-    csocket_udp_listen(sock, handler);
+    csocket_udp_listen(udp_server, handler);
 	pass();
 }
 
 int main() {
+    server_config config = { "192.168.31.78", 5200, 5201 };
+    server_start(&config);
 
 	TESTS (
 		test1

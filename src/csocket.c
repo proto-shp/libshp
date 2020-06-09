@@ -5,13 +5,19 @@
 #include "libshp/csocket.h"
 
 #ifdef _WIN32
-	// can put windows trash here
+    #include <winsock2.h>
+    #include <ws2tcpip.h>
 #else
 	#include <unistd.h>
 	#include <stdio.h> 
 	#include <sys/socket.h>
 	#include <netinet/in.h>
     #include <arpa/inet.h>
+#endif
+
+//PLATFORM windows needs an init function to startup socket lib
+#ifdef _WIN32
+    shp_error init_sock_lib() {}
 #endif
 
 shp_error csocket_init(csocket* sock, const char *addr, unsigned int port, csocket_type type) {
@@ -55,7 +61,7 @@ shp_error csocket_tcp_init(csocket *sock, const char *addr, unsigned int port) {
 }
 
 // This function is only used to respond to an open client socket
-// sock is an open client socket from a server with pre-existing connection
+// sock if an open client socket from a server with pre-existing connection
 shp_error csocket_tcp_send(csocket sock, char *buffer, int length) {
     int bytes = write(sock, buffer, length);
     if (bytes < 1) {
@@ -185,7 +191,7 @@ shp_error csocket_udp_listen(csocket sock, csocket_handler handler) {
 
 shp_error csocket_close(const csocket sock) {
 #ifdef _WIN32
-    closesocket(*sock);
+    closesocket(sock);
     WSACleanup();
 #else
     close(sock);
