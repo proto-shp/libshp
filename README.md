@@ -2,7 +2,7 @@
 
 ## Build Instructions
 cmake -H. -Bbuild
-cmake --build buil
+cmake --build build
 
 tests will be build into the /build/tests directory so you can run them as:
 ./build/tests/{test_name}
