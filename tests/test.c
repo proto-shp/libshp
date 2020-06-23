@@ -7,6 +7,7 @@
 #include "libshp/id_table.h"
 #include "libshp/message.h"
 #include "libshp/server.h"
+#include "libshp/serial.h"
 
 csocket tcp_client;
 csocket udp_client;
@@ -155,14 +156,37 @@ const char *message() {
 	pass();
 }
 
+const char *serial(){
+	Message_Payload message = make_message_payload();
+	write_message_payload("(u8, s8, u16, s16, u32, s32)", &message, 1, 2, 3, 4, 5, 6);
+
+	uint8_t a;
+	int8_t b;
+	uint16_t c;
+	int16_t d;
+	uint32_t e;
+	int32_t f;
+	read_message_payload("(u8, s8, u16, s16, u32, s32)", &message, &a, &b, &c, &d, &e, &f);
+
+	unit_assert("a should equal 1", a == 1);
+	unit_assert("b should equal 2", b == 2);
+	unit_assert("c should equal 3", c == 3);
+	unit_assert("d should equal 4", d == 4);
+	unit_assert("e should equal 5", e == 5);
+	unit_assert("f should equal 6", f == 6);
+	
+	pass();
+}
+
 int main() {
-    server_config config = { "192.168.31.78", 5200, 5201 };
-    server_start(&config);
+    //server_config config = { "192.168.31.78", 5200, 5201 };
+    //server_start(&config);
 
 	TESTS (
-		test1,
+		//test1,
 		id_table,
-		message
+		message,
+		serial
 	);
 
     return 0;
