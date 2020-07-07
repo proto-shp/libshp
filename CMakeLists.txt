@@ -11,6 +11,7 @@ add_library(libshp
 			./src/id_table.c
 			./src/message.c
 			./src/serial.c
+			./src/thread_safe_queue.c
 			)
 
 add_library(LIBSHP::libshp ALIAS libshp)
