@@ -8,6 +8,8 @@
 #include "libshp/message.h"
 #include "libshp/server.h"
 #include "libshp/serial.h"
+#include "libshp/thread_safe_queue.h"
+
 
 csocket tcp_client;
 csocket udp_client;
@@ -178,6 +180,36 @@ const char *serial(){
 	pass();
 }
 
+const char *thread_safe_queue(){
+	Message_Queue q = make_message_queue(4);
+/*	Message_Header a, b, c, d, e;
+	
+	//Just putting some junk values in here to tell them apart
+	a.message_id = 1;
+	b.message_id = 2;
+	c.message_id = 3;
+	d.message_id = 4;
+	e.message_id = 5;
+
+	unit_assert("Queue should have room", push(&q, a) == 1);
+	unit_assert("Queue should have room", push(&q, b) == 1);
+	unit_assert("Queue should have room", push(&q, c) == 1);
+	unit_assert("Queue should have room", push(&q, d) == 1);
+	unit_assert("Queue should be full", push(&q, e) == 0);
+
+	printf("head = %d, tail = %d\n", q.head, q.tail);
+	unit_assert("Head should be 0", q.head == 0);
+	unit_assert("Tail should be 0", q.tail == 0);
+
+	unit_assert("Queue should have item", pull(&q, &a) == 1);
+	unit_assert("Queue should have item", pull(&q, &b) == 1);
+	unit_assert("Queue should have item", pull(&q, &c) == 1);
+	unit_assert("Queue should have item", pull(&q, &d) == 1);
+	unit_assert("Queue shouldn't have item", pull(&q, &e) == 0);
+*/
+	pass();
+}
+
 int main() {
     //server_config config = { "192.168.31.78", 5200, 5201 };
     //server_start(&config);
@@ -186,7 +218,8 @@ int main() {
 		//test1,
 		id_table,
 		message,
-		serial
+		serial,
+		thread_safe_queue
 	);
 
     return 0;

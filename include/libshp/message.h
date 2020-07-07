@@ -8,6 +8,7 @@
 
 #define DEFAULT_SPACE_FOR_PAYLOAD_ARGS 512
 #define DEFAULT_PAYLOAD_LENGTH 8
+void init_semaphores();
 
 typedef struct Message_Payload Message_Payload;
 struct Message_Payload{
