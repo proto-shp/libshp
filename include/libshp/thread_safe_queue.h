@@ -4,6 +4,11 @@
 #include <stdint.h>
 #include "libshp/message.h"
 
+#include <semaphore.h>
+
+sem_t *empty_count;
+sem_t *full_count;
+
 typedef struct{
 	Message_Header *queue;
 	uint32_t length;
